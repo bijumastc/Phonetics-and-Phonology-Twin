@@ -1,1 +1,1133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phonetics and Phonology Twin</title>
+<style>
+  :root {
+    --bg: #FDFBF7; --card: #ffffff; --ink: #1a1a1a; --muted: #5c5c5c;
+    --line: #e4e0d8; --accent: #2f5d8a; --accent-soft: #e6eef6;
+    --good: #1f7a4d; --good-soft: #e3f4ea; --bad: #b3261e; --bad-soft: #fbe9e7;
+    --warn: #8a5a00; --warn-soft: #fdf3dc; --dev: #c98a12; --track: #ecebe7;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif; font-size: 17px; line-height: 1.5; }
+  .wrap { max-width: 820px; margin: 0 auto; padding: 16px; }
+  header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; padding: 12px 0 20px; }
+  header h1 { font-size: 22px; margin: 0; }
+  .linkbtn { background: none; border: none; color: var(--muted); font-size: 15px; cursor: pointer; text-decoration: underline; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 24px; margin-bottom: 16px; }
+  h2 { margin: 0 0 8px; font-size: 24px; }
+  h3 { margin: 20px 0 8px; font-size: 18px; }
+  p.lead { color: var(--muted); margin: 0 0 18px; }
+  label { display: block; font-weight: 600; margin: 12px 0 6px; font-size: 15px; }
+  input[type=text], input[type=password], textarea {
+    width: 100%; padding: 11px 14px; font-size: 17px; border: 2px solid var(--line);
+    border-radius: 10px; background: #fafafa; font-family: "Charis SIL", "Doulos SIL", "Gentium Plus", "Lucida Sans Unicode", sans-serif;
+  }
+  input:focus, textarea:focus { outline: none; border-color: var(--accent); background: #fff; }
+  .btn { display: inline-block; border: none; border-radius: 10px; padding: 11px 18px; font-size: 16px; font-weight: 600;
+    cursor: pointer; background: var(--accent); color: #fff; }
+  .btn:hover { filter: brightness(1.08); }
+  .btn.secondary { background: #ecebe7; color: var(--ink); }
+  .btn.full { width: 100%; margin-top: 18px; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .error { color: var(--bad); font-size: 14px; margin-top: 8px; min-height: 1em; }
+  .hidden { display: none !important; }
+  .row-btns { display: flex; gap: 10px; flex-wrap: wrap; }
 
+  .student-bar { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-size: 14px; color: var(--muted); margin-bottom: 12px; }
+  .tabs { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; margin-bottom: 16px; }
+  .tab { border: 2px solid var(--line); background: var(--card); border-radius: 12px; padding: 10px 4px; cursor: pointer;
+    font-size: 14px; font-weight: 600; text-align: center; color: var(--ink); }
+  .tab small { display: block; font-weight: 400; color: var(--muted); font-size: 12px; }
+  .tab.active { border-color: var(--accent); background: var(--accent-soft); }
+  .tab.done small { color: var(--good); }
+
+  .progress { height: 10px; background: var(--track); border-radius: 99px; overflow: hidden; margin: 8px 0 4px; }
+  .progress > div { height: 100%; background: var(--accent); transition: width .3s; }
+  .qmeta { display: flex; justify-content: space-between; gap: 10px; font-size: 14px; color: var(--muted); }
+  .marks-badge { display: inline-block; background: var(--accent-soft); color: var(--accent); font-size: 13px; font-weight: 700;
+    padding: 3px 10px; border-radius: 99px; margin: 0 6px 10px 0; }
+  .skill-tag { display: inline-block; background: #f3f1ec; color: var(--muted); font-size: 12px; padding: 3px 8px; border-radius: 99px; margin: 0 4px 10px 0; }
+  .prompt { font-size: 18px; margin: 4px 0 14px; }
+  .prompt .word { font-weight: 800; }
+
+  .ipa-keys { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
+  .ipa-keys button { min-width: 40px; height: 40px; font-size: 18px; border: 1px solid var(--line); background: #fff; color: var(--ink);
+    border-radius: 8px; cursor: pointer; font-family: "Charis SIL", "Doulos SIL", "Lucida Sans Unicode", sans-serif; }
+  .ipa-keys button:hover { background: var(--accent-soft); }
+  .ipa-keys .wide { min-width: 70px; font-size: 13px; }
+
+  .options { display: grid; gap: 8px; }
+  .option { text-align: left; padding: 12px 14px; border: 2px solid var(--line); border-radius: 12px; background: #fff;
+    font-size: 16px; cursor: pointer; font-family: inherit; color: var(--ink); }
+  .option:hover:not(:disabled) { border-color: var(--accent); }
+  .option.selected { border-color: var(--accent); background: var(--accent-soft); }
+  .option.correct { border-color: var(--good); background: var(--good-soft); }
+  .option.wrong { border-color: var(--bad); background: var(--bad-soft); }
+
+  .multipart { margin: 12px 0; }
+  .multipart label { font-weight: 600; margin-bottom: 4px; }
+  .multipart .part-marks { font-size: 13px; color: var(--muted); font-weight: 400; }
+
+  .feedback { border-radius: 12px; padding: 14px 16px; margin-top: 14px; font-size: 15px; }
+  .feedback.good { background: var(--good-soft); color: var(--good); }
+  .feedback.bad { background: var(--bad-soft); color: var(--bad); }
+  .feedback.warn { background: var(--warn-soft); color: var(--warn); }
+  .feedback .explain { color: var(--ink); margin-top: 6px; }
+  .hintbox { background: var(--warn-soft); color: var(--warn); border-radius: 10px; padding: 10px 14px; margin-top: 10px; font-size: 14px; }
+  .actions { display: flex; justify-content: space-between; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
+
+  .score-big { font-size: 48px; font-weight: 800; margin: 8px 0; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 8px; }
+  .stat { background: #f6f4ef; border-radius: 12px; padding: 12px 8px; text-align: center; font-size: 13px; color: var(--muted); }
+  .stat b { display: block; font-size: 24px; color: var(--ink); }
+  .skill { margin: 10px 0; }
+  .skill-top { display: flex; justify-content: space-between; gap: 10px; font-size: 14px; margin-bottom: 4px; }
+  .bar { height: 9px; background: var(--track); border-radius: 99px; overflow: hidden; }
+  .bar > div { height: 100%; border-radius: 99px; }
+  .bar .strong { background: var(--good); } .bar .dev { background: var(--dev); } .bar .weak { background: var(--bad); }
+  .lv { font-weight: 600; white-space: nowrap; }
+  .lv.strong { color: var(--good); } .lv.dev { color: var(--warn); } .lv.weak { color: var(--bad); } .lv.none { color: var(--muted); font-weight: 400; }
+  .focus-box { border: 2px solid var(--bad-soft); background: #fffaf9; border-radius: 14px; padding: 14px 16px; margin-top: 14px; }
+  .list { margin: 0; padding-left: 20px; font-size: 15px; }
+  .list li { margin: 5px 0; }
+  .muted { color: var(--muted); font-size: 14px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { padding: 9px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+  th { background: #f3f1ec; }
+  tbody tr.clickable { cursor: pointer; }
+  tbody tr.clickable:hover { background: var(--accent-soft); }
+  .table-scroll { overflow-x: auto; }
+  @media (max-width: 480px) { .card { padding: 16px; } .stat b { font-size: 20px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>📚 Phonetics and Phonology Twin</h1>
+    <div>
+      <button class="linkbtn hidden" id="logout-btn" onclick="logout()">Not you? Switch student</button>
+      <button class="linkbtn" id="teacher-link" onclick="show('instructor-auth')">Teacher login</button>
+      <button class="linkbtn hidden" id="student-link" onclick="backToStudent()">Back to practice</button>
+    </div>
+  </header>
+
+  <!-- LOGIN -->
+  <section id="login" class="card">
+    <h2>Welcome!</h2>
+    <p class="lead">Enter your details. Your <b>Learning Twin</b> will track your strengths and weak areas as you practise.</p>
+    <label for="in-name">Full name</label>
+    <input type="text" id="in-name" placeholder="e.g. Anjali Menon" autocomplete="name">
+    <label for="in-roll">Roll number</label>
+    <input type="text" id="in-roll" placeholder="e.g. 1045">
+    <label for="in-college">College</label>
+    <input type="text" id="in-college" placeholder="e.g. Government Victoria College">
+    <div class="error" id="login-error"></div>
+    <button class="btn full" onclick="startLab()">Start practising →</button>
+  </section>
+
+  <!-- LAB -->
+  <section id="lab" class="hidden">
+    <div class="student-bar">
+      <span>👤 <b id="show-name"></b> · Roll <span id="show-roll"></span></span>
+      <span id="show-college"></span>
+    </div>
+    <div class="tabs" id="tabs"></div>
+    <div class="card hidden" id="twin-card"></div>
+    <div class="card" id="question-card">
+      <div class="qmeta"><span id="set-title"></span><span id="q-count"></span></div>
+      <div class="progress"><div id="progress-fill"></div></div>
+      <div style="margin-top:14px" id="question-area"></div>
+      <div class="actions">
+        <button class="btn secondary" id="hint-btn" onclick="showHint()">💡 Hint</button>
+        <div style="display:flex;gap:10px">
+          <button class="btn" id="check-btn" onclick="checkAnswer()">Check answer</button>
+          <button class="btn hidden" id="next-btn" onclick="nextQuestion()">Next →</button>
+        </div>
+      </div>
+    </div>
+    <div class="card hidden" id="result-card" style="text-align:center"></div>
+  </section>
+
+  <!-- TEACHER AUTH -->
+  <section id="instructor-auth" class="card hidden" style="max-width:420px;margin:0 auto">
+    <h2>🔒 Teacher login</h2>
+    <p class="lead">Enter the dashboard password.</p>
+    <input type="password" id="in-password" placeholder="Password" onkeydown="if(event.key==='Enter')verifyTeacher()">
+    <div class="error" id="pw-error"></div>
+    <button class="btn full" onclick="verifyTeacher()">Open dashboard</button>
+  </section>
+
+  <!-- DASHBOARD -->
+  <section id="dashboard" class="hidden">
+    <div class="card">
+      <h2>📊 Class dashboard</h2>
+      <p class="lead">Results from your Google Sheet.</p>
+      <div class="row-btns">
+        <button class="btn" onclick="loadDashboard()">🔄 Refresh</button>
+        <button class="btn secondary" onclick="exportCSV()">📥 Download CSV</button>
+      </div>
+      <div class="error" id="dash-error"></div>
+    </div>
+    <div class="card" id="class-overview">
+      <h2 style="font-size:20px">🧠 Class overview</h2>
+      <p class="muted">Click Refresh to load data.</p>
+    </div>
+    <div class="card hidden" id="student-detail"></div>
+    <div class="card table-scroll">
+      <h2 style="font-size:20px">All submissions</h2>
+      <table>
+        <thead><tr><th>Roll</th><th>Name</th><th>College</th><th>Set</th><th>Score</th><th>Weak areas</th><th>Time</th></tr></thead>
+        <tbody id="dash-body"><tr><td colspan="7" style="text-align:center;color:var(--muted)">No data yet.</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<script>
+/* ============================================================
+   SETTINGS
+   ============================================================ */
+const GOOGLE_SCRIPT_URL = "";          // ← paste your Apps Script /exec URL
+const TEACHER_PASSWORD  = "teacher123"; // change this
+
+/* ============================================================
+   SKILLS TRACKED BY THE TWIN
+   ============================================================ */
+const SKILLS = {
+  concepts:     { name: "Phonology concepts",     tip: "Phoneme, allophone, minimal pair, distribution" },
+  consonants:   { name: "Consonants & 3-term",    tip: "Voicing + place + manner labelling" },
+  vowels:       { name: "Pure vowels",            tip: "Short & long monophthongs with examples" },
+  diph:         { name: "Diphthongs",             tip: "Closing and centring diphthongs" },
+  stress:       { name: "Word stress",            tip: "Primary/secondary stress and stress shift" },
+  connected:    { name: "Connected speech",       tip: "Weak forms, assimilation, elision, linking r" },
+  intonation:   { name: "Intonation",             tip: "Fall, rise, fall-rise and their functions" },
+  transcription:{ name: "IPA transcription",     tip: "Accurate RP transcription with stress marks" }
+};
+
+/* ============================================================
+   QUESTION BANK – 3 mixed sets of 25 questions each
+   (Every set covers all topics. No unnecessary repetition.)
+   ============================================================ */
+const SETS = [
+  // ===================== SET 1 =====================
+  { title: "Set 1 · Mixed Practice", questions: [
+    // 2-mark questions
+    { id:"s1q01", type:"mcq", marks:2, skills:["concepts"],
+      q:"What is the difference between phonetics and phonology?",
+      options:["Phonetics studies meaning; phonology studies sound waves","Phonetics studies physical sounds; phonology studies how sounds are organised in a language","They are the same thing","Phonology only studies consonants"],
+      correct:1, hint:"Think about physical production vs language organisation.",
+      explain:"Phonetics = physical production/perception of sounds. Phonology = how sounds are organised and contrast in a language." },
+
+    { id:"s1q02", type:"ipa", marks:2, skills:["transcription","vowels"],
+      word:"ship", answers:["ʃɪp"], hint:"Short vowel, 'sh' = ʃ.",
+      explain:"/ʃɪp/ — short /ɪ/. Compare with sheep /ʃiːp/." },
+
+    { id:"s1q03", type:"mcq", marks:2, skills:["consonants"],
+      q:"Which of these is a voiced bilabial plosive?",
+      options:["/p/","/b/","/m/","/f/"], correct:1,
+      hint:"Voiced + both lips + complete closure.",
+      explain:"/b/ is voiced bilabial plosive. /p/ is voiceless." },
+
+    { id:"s1q04", type:"ipa", marks:2, skills:["transcription","diph"],
+      word:"time", answers:["taɪm"], hint:"The vowel is a diphthong /aɪ/.",
+      explain:"/taɪm/ — closing diphthong /aɪ/." },
+
+    { id:"s1q05", type:"mcq", marks:2, skills:["concepts"],
+      q:"Two words that differ in only one sound and have different meanings are called a…",
+      options:["Allophone pair","Minimal pair","Complementary pair","Phonetic pair"], correct:1,
+      hint:"pin vs bin is a classic example.",
+      explain:"Minimal pair proves two sounds are separate phonemes." },
+
+    { id:"s1q06", type:"ipa", marks:2, skills:["transcription","consonants"],
+      word:"think", answers:["θɪŋk"], hint:"Voiceless 'th' + ŋ before k.",
+      explain:"/θɪŋk/ — θ (voiceless), ŋ (velar nasal)." },
+
+    { id:"s1q07", type:"mcq", marks:2, skills:["vowels"],
+      q:"Which is a long pure vowel?",
+      options:["/ɪ/","/æ/","/iː/","/e/"], correct:2,
+      hint:"Look for the length mark ː.",
+      explain:"/iː/ is long close front. /ɪ/ is short." },
+
+    { id:"s1q08", type:"ipa", marks:2, skills:["transcription","stress"],
+      word:"about", answers:["əˈbaʊt"], stress:true, hint:"First syllable is weak schwa; stress on second.",
+      explain:"/əˈbaʊt/ — schwa + stress on second syllable." },
+
+    { id:"s1q09", type:"mcq", marks:2, skills:["connected"],
+      q:"In natural speech, “and” in “fish and chips” often becomes…",
+      options:["/ænd/","/ən/","/ændə/","/an/"], correct:1,
+      hint:"Function words usually weaken.",
+      explain:"Weak form /ən/ (or /ənd/) is normal in connected speech." },
+
+    { id:"s1q10", type:"mcq", marks:2, skills:["intonation"],
+      q:"A rising tone is most typically used for…",
+      options:["Wh-questions","Yes/no questions","Commands","Finished statements"], correct:1,
+      hint:"Think of “Are you ready?”",
+      explain:"Yes/no questions normally take a rising tone." },
+
+    { id:"s1q11", type:"ipa", marks:2, skills:["transcription","vowels"],
+      word:"bird", answers:["bɜːd"], hint:"Long central vowel; no /r/ in RP.",
+      explain:"/bɜːd/ — long /ɜː/, non-rhotic." },
+
+    { id:"s1q12", type:"mcq", marks:2, skills:["concepts"],
+      q:"[pʰ] in “pin” and [p] in “spin” are…",
+      options:["Two different phonemes","Allophones of /p/","A minimal pair","Diphthongs"], correct:1,
+      hint:"Do they ever change meaning in English?",
+      explain:"They are allophones of the same phoneme /p/." },
+
+    // 5-mark questions
+    { id:"s1q13", type:"desc", marks:5, skills:["consonants"],
+      q:"Give the three-term label for /t/ (voicing + place + manner).",
+      answers:["voiceless alveolar plosive","voiceless alveolar stop"],
+      hint:"No vibration + ridge behind teeth + complete closure then release.",
+      explain:"/t/ = voiceless alveolar plosive (or stop)." },
+
+    { id:"s1q14", type:"desc", marks:5, skills:["vowels"],
+      q:"Describe the vowel /uː/ (height + backness + lip position + length) and give one example word.",
+      answers:["close back rounded long","close back rounded","high back rounded long"],
+      hint:"Tongue high and back, lips rounded, long.",
+      explain:"/uː/ is a long close back rounded vowel (e.g. food, moon)." },
+
+    { id:"s1q15", type:"ipa", marks:5, skills:["transcription","stress"],
+      word:"photograph", answers:["ˈfəʊtəɡrɑːf","ˈfəʊtəɡræf"], stress:true,
+      hint:"Stress on first syllable; middle vowel is schwa.",
+      explain:"/ˈfəʊtəɡrɑːf/ — primary stress on first syllable." },
+
+    { id:"s1q16", type:"desc", marks:5, skills:["diph"],
+      q:"Name the diphthong in the word “boy” and say which group it belongs to (closing or centring).",
+      answers:["ɔɪ closing","/ɔɪ/ closing","ɔɪ closing diphthong"],
+      hint:"It ends in a closer vowel.",
+      explain:"/ɔɪ/ is a closing diphthong (ends towards /ɪ/)." },
+
+    { id:"s1q17", type:"mcq", marks:5, skills:["concepts"],
+      q:"Clear [l] in “leaf” and dark [ɫ] in “feel” are in complementary distribution. What does this tell us?",
+      options:["They are different phonemes","They are allophones of the same phoneme /l/","They form a minimal pair","One is a vowel"],
+      correct:1, hint:"They never appear in the same environment.",
+      explain:"Complementary distribution + phonetic similarity → allophones of one phoneme." },
+
+    { id:"s1q18", type:"desc", marks:5, skills:["connected"],
+      q:"What happens to the /n/ in “ten boys” in natural connected speech? Name the process.",
+      answers:["becomes m assimilation","/n/ → /m/ assimilation","assimilation to /m/"],
+      hint:"It takes the place of the following bilabial sound.",
+      explain:"/n/ becomes /m/ before /b/ — this is assimilation of place." },
+
+    { id:"s1q19", type:"ipa", marks:5, skills:["transcription","stress","schwa"],
+      word:"teacher", answers:["ˈtiːtʃə"], stress:true,
+      hint:"'ch' = tʃ; stress first syllable; ending is weak, no r.",
+      explain:"/ˈtiːtʃə/ — long /iː/, affricate, schwa." },
+
+    { id:"s1q20", type:"desc", marks:5, skills:["stress"],
+      q:"In the noun “record” and the verb “to record”, where does the stress fall in each?",
+      answers:["noun first verb second","noun ˈrekɔːd verb rɪˈkɔːd","noun first syllable verb second"],
+      hint:"Many two-syllable noun/verb pairs shift stress.",
+      explain:"Noun /ˈrekɔːd/ (first), verb /rɪˈkɔːd/ (second)." },
+
+    // 10-mark multi-part
+    { id:"s1q21", type:"multi", marks:10, skills:["consonants"],
+      q:"Three-term labelling practice",
+      parts: [
+        { label:"A. Label /k/ (3 marks)", marks:3, answers:["voiceless velar plosive","voiceless velar stop"] },
+        { label:"B. Label /v/ (3 marks)", marks:3, answers:["voiced labiodental fricative"] },
+        { label:"C. Label /ŋ/ (2 marks)", marks:2, answers:["voiced velar nasal","velar nasal"] },
+        { label:"D. Give one example word for /ŋ/ (2 marks)", marks:2, answers:["sing","song","thing","ring","long"] }
+      ],
+      hint:"Remember: voicing + place + manner.",
+      explain:"/k/ voiceless velar plosive; /v/ voiced labiodental fricative; /ŋ/ (voiced) velar nasal (sing, song…)." },
+
+    { id:"s1q22", type:"multi", marks:10, skills:["vowels"],
+      q:"Pure vowels – short and long",
+      parts: [
+        { label:"A. List any three short pure vowels of RP (3 marks)", marks:3, answers:["ɪ e æ ʌ ɒ ʊ ə","any three of: ɪ e æ ʌ ɒ ʊ ə"] },
+        { label:"B. List any three long pure vowels (3 marks)", marks:3, answers:["iː ɑː ɔː uː ɜː","any three of: iː ɑː ɔː uː ɜː"] },
+        { label:"C. Which is the most common vowel sound in English? (2 marks)", marks:2, answers:["ə","schwa","/ə/"] },
+        { label:"D. Give one example word containing schwa (2 marks)", marks:2, answers:["about","teacher","sofa","banana","computer","photograph"] }
+      ],
+      hint:"There are 7 short and 5 long pure vowels.",
+      explain:"Short: ɪ e æ ʌ ɒ ʊ ə. Long: iː ɑː ɔː uː ɜː. Schwa /ə/ is the most common." },
+
+    { id:"s1q23", type:"multi", marks:10, skills:["concepts"],
+      q:"Phoneme, allophone and minimal pair",
+      parts: [
+        { label:"A. Define a phoneme in one sentence (3 marks)", marks:3, answers:["smallest unit that can change meaning","sound that distinguishes meaning"] },
+        { label:"B. What is an allophone? (3 marks)", marks:3, answers:["variant of a phoneme that does not change meaning","predictable variant of a phoneme"] },
+        { label:"C. Give one minimal pair for /p/ and /b/ (2 marks)", marks:2, answers:["pin bin","pat bat","pear bear","cap cab"] },
+        { label:"D. Give one minimal pair for /ɪ/ and /iː/ (2 marks)", marks:2, answers:["ship sheep","sit seat","bit beat","fill feel"] }
+      ],
+      hint:"Phoneme changes meaning; allophone does not.",
+      explain:"Phoneme = smallest meaning-distinguishing unit. Allophone = non-contrastive variant. Examples: pin/bin, ship/sheep." },
+
+    { id:"s1q24", type:"multi", marks:10, skills:["connected"],
+      q:"Connected speech processes",
+      parts: [
+        { label:"A. What is assimilation? (3 marks)", marks:3, answers:["sound becomes more like a neighbour","a sound changes to become similar to a neighbouring sound"] },
+        { label:"B. What is elision? (3 marks)", marks:3, answers:["a sound is left out","omission of a sound"] },
+        { label:"C. Give one example of linking /r/ (2 marks)", marks:2, answers:["car engine","far away","for example"] },
+        { label:"D. Give one example of intrusive /r/ (2 marks)", marks:2, answers:["law and order","media event","idea of"] }
+      ],
+      hint:"Assimilation = becoming similar; elision = dropping a sound.",
+      explain:"Assimilation: sound becomes like neighbour. Elision: sound omitted. Linking r: car engine. Intrusive r: law and order." },
+
+    { id:"s1q25", type:"multi", marks:10, skills:["stress","connected"],
+      q:"Stress and weak forms",
+      parts: [
+        { label:"A. Where is the main stress in “banana”? (2 marks)", marks:2, answers:["second","2nd","na"] },
+        { label:"B. Write the weak form of “of” (2 marks)", marks:2, answers:["əv","ə"] },
+        { label:"C. Write a natural connected-speech transcription of “a cup of tea” (4 marks)", marks:4, answers:["ə ˈkʌp əv ˈtiː","ə kʌp ə tiː"] },
+        { label:"D. Why do function words often weaken? (2 marks)", marks:2, answers:["they are unstressed","stress-timed rhythm","content words carry stress"] }
+      ],
+      hint:"Content words are stressed; function words reduce.",
+      explain:"banana = stress on 2nd syllable. “of” → /əv/ or /ə/. Natural: /ə ˈkʌp əv ˈtiː/." }
+  ]},
+
+  // ===================== SET 2 =====================
+  { title: "Set 2 · Mixed Practice", questions: [
+    { id:"s2q01", type:"mcq", marks:2, skills:["concepts"],
+      q:"A phone is…",
+      options:["A meaning-changing unit","Any speech sound described as it is produced","A letter of the alphabet","Always written between slashes"],
+      correct:1, hint:"Phones are written in square brackets [ ].",
+      explain:"A phone is any concrete speech sound; phonemes are abstract units." },
+
+    { id:"s2q02", type:"ipa", marks:2, skills:["transcription","vowels"],
+      word:"sheep", answers:["ʃiːp"], hint:"Long vowel — remember ː.",
+      explain:"/ʃiːp/ — long /iː/." },
+
+    { id:"s2q03", type:"mcq", marks:2, skills:["consonants"],
+      q:"/θ/ and /ð/ differ only in…",
+      options:["Place","Manner","Voicing","Length"], correct:2,
+      hint:"One has vocal-fold vibration, the other does not.",
+      explain:"Both are dental fricatives; /ð/ is voiced, /θ/ is voiceless." },
+
+    { id:"s2q04", type:"ipa", marks:2, skills:["transcription","diph"],
+      word:"house", answers:["haʊs"], hint:"Glide from open to close back.",
+      explain:"/haʊs/ — diphthong /aʊ/." },
+
+    { id:"s2q05", type:"mcq", marks:2, skills:["vowels"],
+      q:"The vowel in the first syllable of “banana” is usually…",
+      options:["/æ/","/ɑː/","/ə/","/ʌ/"], correct:2,
+      hint:"It is unstressed.",
+      explain:"/bəˈnɑːnə/ — first syllable is schwa." },
+
+    { id:"s2q06", type:"ipa", marks:2, skills:["transcription","consonants"],
+      word:"judge", answers:["dʒʌdʒ"], hint:"Both ends are the same affricate.",
+      explain:"/dʒʌdʒ/ — voiced post-alveolar affricate at both ends." },
+
+    { id:"s2q07", type:"mcq", marks:2, skills:["stress"],
+      q:"In “photography”, the main stress falls on which syllable?",
+      options:["1st (pho)","2nd (to)","3rd (gra)","4th (phy)"], correct:1,
+      hint:"Say it slowly: pho-TO-gra-phy.",
+      explain:"/fəˈtɒɡrəfi/ — stress on the second syllable." },
+
+    { id:"s2q08", type:"ipa", marks:2, skills:["transcription","stress"],
+      word:"better", answers:["ˈbetə"], stress:true, hint:"RP drops the final r; stress on first syllable.",
+      explain:"/ˈbetə/ — non-rhotic, schwa ending." },
+
+    { id:"s2q09", type:"mcq", marks:2, skills:["connected"],
+      q:"The process of leaving out a sound (e.g. /d/ in “friendship”) is called…",
+      options:["Assimilation","Elision","Linking","Intrusion"], correct:1,
+      hint:"The sound disappears.",
+      explain:"Elision = omission of a sound." },
+
+    { id:"s2q10", type:"mcq", marks:2, skills:["intonation"],
+      q:"A falling tone is typically used for…",
+      options:["Yes/no questions","Finished statements and wh-questions","Polite invitations","Lists (non-final items)"], correct:1,
+      hint:"It signals completeness.",
+      explain:"Falling tone = finished, definite (statements, wh-questions, commands)." },
+
+    { id:"s2q11", type:"ipa", marks:2, skills:["transcription","vowels"],
+      word:"cat", answers:["kæt"], hint:"Open front vowel.",
+      explain:"/kæt/ — short open front /æ/." },
+
+    { id:"s2q12", type:"mcq", marks:2, skills:["concepts"],
+      q:"When two sounds can appear in the same environment and change meaning, they are in…",
+      options:["Complementary distribution","Parallel (overlapping) distribution","Free variation only","Allophonic distribution"], correct:1,
+      hint:"This is evidence they are different phonemes.",
+      explain:"Parallel distribution + meaning contrast → different phonemes." },
+
+    // 5-mark
+    { id:"s2q13", type:"desc", marks:5, skills:["consonants"],
+      q:"Give the three-term label for /dʒ/.",
+      answers:["voiced post-alveolar affricate","voiced palato-alveolar affricate"],
+      hint:"Voiced + just behind the ridge + stop released into fricative.",
+      explain:"/dʒ/ = voiced post-alveolar (palato-alveolar) affricate." },
+
+    { id:"s2q14", type:"desc", marks:5, skills:["vowels"],
+      q:"Describe /æ/ and give two example words.",
+      answers:["open front unrounded short","open front short"],
+      hint:"Tongue low and front, lips unrounded, short.",
+      explain:"/æ/ is a short open front unrounded vowel (cat, man, hand)." },
+
+    { id:"s2q15", type:"ipa", marks:5, skills:["transcription","stress"],
+      word:"computer", answers:["kəmˈpjuːtə"], stress:true,
+      hint:"Stress on the middle syllable; first and last are weak.",
+      explain:"/kəmˈpjuːtə/." },
+
+    { id:"s2q16", type:"desc", marks:5, skills:["diph"],
+      q:"Name the three centring diphthongs of RP.",
+      answers:["ɪə eə ʊə","/ɪə/ /eə/ /ʊə/"],
+      hint:"They all end in schwa.",
+      explain:"The centring diphthongs are /ɪə/, /eə/, /ʊə/." },
+
+    { id:"s2q17", type:"mcq", marks:5, skills:["concepts"],
+      q:"The Phonemic Principle says two sounds are the same phoneme if they are…",
+      options:["In parallel distribution and different in meaning","In complementary distribution and phonetically similar","Always the same length","Written with the same letter"],
+      correct:1, hint:"Allophones never contrast and look/sound similar.",
+      explain:"Complementary distribution + phonetic similarity → same phoneme (allophones)." },
+
+    { id:"s2q18", type:"desc", marks:5, skills:["connected"],
+      q:"Explain briefly what linking /r/ is and give one example.",
+      answers:["r pronounced before a vowel even if not always sounded","linking r appears when a word ending in r is followed by a vowel"],
+      hint:"RP is non-rhotic, but r appears before a following vowel.",
+      explain:"In non-rhotic RP, /r/ is pronounced when a word ending in orthographic r is followed by a vowel (car engine /kɑːr ˈendʒɪn/)." },
+
+    { id:"s2q19", type:"ipa", marks:5, skills:["transcription","stress"],
+      word:"important", answers:["ɪmˈpɔːtənt"], stress:true,
+      hint:"Stress on the second syllable.",
+      explain:"/ɪmˈpɔːtənt/." },
+
+    { id:"s2q20", type:"desc", marks:5, skills:["stress"],
+      q:"What is secondary stress and how is it marked in IPA?",
+      answers:["weaker stress marked with ˌ","secondary stress is marked with a low vertical line ˌ"],
+      hint:"It is weaker than primary stress.",
+      explain:"Secondary stress is a weaker prominence, marked with ˌ before the syllable (e.g. photographic /ˌfəʊtəˈɡræfɪk/)." },
+
+    // 10-mark
+    { id:"s2q21", type:"multi", marks:10, skills:["consonants"],
+      q:"More three-term labelling",
+      parts: [
+        { label:"A. Label /ʃ/ (3 marks)", marks:3, answers:["voiceless post-alveolar fricative","voiceless palato-alveolar fricative"] },
+        { label:"B. Label /m/ (2 marks)", marks:2, answers:["voiced bilabial nasal","bilabial nasal"] },
+        { label:"C. Label /tʃ/ (3 marks)", marks:3, answers:["voiceless post-alveolar affricate","voiceless palato-alveolar affricate"] },
+        { label:"D. Which manner class do /l r w j/ belong to? (2 marks)", marks:2, answers:["approximants","approximant"] }
+      ],
+      hint:"Affricates = stop released into fricative.",
+      explain:"/ʃ/ voiceless post-alveolar fricative; /m/ bilabial nasal; /tʃ/ voiceless post-alveolar affricate; /l r w j/ are approximants." },
+
+    { id:"s2q22", type:"multi", marks:10, skills:["vowels","diph"],
+      q:"Vowels and diphthongs overview",
+      parts: [
+        { label:"A. How many pure vowels (monophthongs) does RP have? (2 marks)", marks:2, answers:["12","twelve"] },
+        { label:"B. How many diphthongs does RP have? (2 marks)", marks:2, answers:["8","eight"] },
+        { label:"C. Name the three closing diphthongs that end in /ɪ/ (3 marks)", marks:3, answers:["eɪ aɪ ɔɪ","/eɪ/ /aɪ/ /ɔɪ/"] },
+        { label:"D. Give one example word for /əʊ/ (3 marks)", marks:3, answers:["go","home","boat","so","know"] }
+      ],
+      hint:"12 pure + 8 diphthongs = 20 vowel phonemes.",
+      explain:"12 monophthongs, 8 diphthongs. Closing to /ɪ/: /eɪ aɪ ɔɪ/. /əʊ/ as in go, home, boat." },
+
+    { id:"s2q23", type:"multi", marks:10, skills:["concepts"],
+      q:"Syllable structure",
+      parts: [
+        { label:"A. What are the three possible parts of a syllable? (3 marks)", marks:3, answers:["onset nucleus coda"] },
+        { label:"B. Which part is obligatory? (2 marks)", marks:2, answers:["nucleus","the vowel"] },
+        { label:"C. Analyse the syllable structure of “cat” (3 marks)", marks:3, answers:["onset k nucleus æ coda t","k + æ + t"] },
+        { label:"D. What does “maximal onset” mean? (2 marks)", marks:2, answers:["attach consonants to the start of the next syllable","consonants prefer to be onsets"] }
+      ],
+      hint:"Every syllable needs a nucleus (usually a vowel).",
+      explain:"Onset + Nucleus + Coda. Nucleus is obligatory. cat = /k/ + /æ/ + /t/. Maximal onset = consonants go to the following syllable where possible." },
+
+    { id:"s2q24", type:"multi", marks:10, skills:["connected"],
+      q:"Assimilation and elision examples",
+      parts: [
+        { label:"A. What happens in “good boy” in fast speech? (3 marks)", marks:3, answers:["d becomes b","/d/ → /b/","assimilation"] },
+        { label:"B. What happens in “next day”? (3 marks)", marks:3, answers:["t is dropped","elision of t","/t/ elided"] },
+        { label:"C. Name the process in A (2 marks)", marks:2, answers:["assimilation"] },
+        { label:"D. Name the process in B (2 marks)", marks:2, answers:["elision"] }
+      ],
+      hint:"One is becoming similar; one is disappearing.",
+      explain:"good boy → /ɡʊb bɔɪ/ (assimilation). next day → /neks deɪ/ (elision of /t/)." },
+
+    { id:"s2q25", type:"multi", marks:10, skills:["stress","intonation"],
+      q:"Stress and intonation functions",
+      parts: [
+        { label:"A. Give one noun/verb pair that changes stress (3 marks)", marks:3, answers:["record","present","export","import","permit"] },
+        { label:"B. What does a fall-rise tone often signal? (3 marks)", marks:3, answers:["reservation","doubt","politeness","something left unsaid"] },
+        { label:"C. In a list, what tones are typically used? (4 marks)", marks:4, answers:["rise on each item fall on the last","rises then final fall"] }
+      ],
+      hint:"Stress can change word class; tone can change attitude.",
+      explain:"record (noun first, verb second). Fall-rise = reservation/politeness. Lists: rise, rise … fall on last item." }
+  ]},
+
+  // ===================== SET 3 =====================
+  { title: "Set 3 · Mixed Practice", questions: [
+    { id:"s3q01", type:"mcq", marks:2, skills:["concepts"],
+      q:"The smallest sound unit that can change meaning is a…",
+      options:["Phone","Allophone","Phoneme","Syllable"], correct:2,
+      hint:"Swapping it can create a new word.",
+      explain:"A phoneme is the smallest meaning-distinguishing unit." },
+
+    { id:"s3q02", type:"ipa", marks:2, skills:["transcription","vowels"],
+      word:"food", answers:["fuːd"], hint:"Long close back rounded vowel.",
+      explain:"/fuːd/ — long /uː/." },
+
+    { id:"s3q03", type:"mcq", marks:2, skills:["consonants"],
+      q:"Which place of articulation is used for /k ɡ ŋ/?",
+      options:["Alveolar","Velar","Bilabial","Dental"], correct:1,
+      hint:"Back of the tongue against the soft palate.",
+      explain:"Velar = soft palate." },
+
+    { id:"s3q04", type:"ipa", marks:2, skills:["transcription","diph"],
+      word:"day", answers:["deɪ"], hint:"Closing diphthong ending in /ɪ/.",
+      explain:"/deɪ/ — /eɪ/." },
+
+    { id:"s3q05", type:"mcq", marks:2, skills:["vowels"],
+      q:"Which vowel is known as “schwa”?",
+      options:["/ɪ/","/ə/","/ʌ/","/ɜː/"], correct:1,
+      hint:"It appears in almost every unstressed syllable.",
+      explain:"Schwa /ə/ is the most common English vowel." },
+
+    { id:"s3q06", type:"ipa", marks:2, skills:["transcription","consonants"],
+      word:"this", answers:["ðɪs"], hint:"Voiced dental fricative.",
+      explain:"/ðɪs/ — voiced /ð/." },
+
+    { id:"s3q07", type:"mcq", marks:2, skills:["stress"],
+      q:"Secondary stress is marked in IPA with…",
+      options:["ˈ","ˌ","ː","."], correct:1,
+      hint:"It is a low mark, not the high primary stress mark.",
+      explain:"Secondary stress = ˌ (primary = ˈ)." },
+
+    { id:"s3q08", type:"ipa", marks:2, skills:["transcription","stress"],
+      word:"sofa", answers:["ˈsəʊfə"], stress:true, hint:"Stress on first syllable; ending is schwa.",
+      explain:"/ˈsəʊfə/." },
+
+    { id:"s3q09", type:"mcq", marks:2, skills:["connected"],
+      q:"RP is described as…",
+      options:["Rhotic","Non-rhotic","Semi-rhotic","Always pronouncing every r"], correct:1,
+      hint:"r is only pronounced before a vowel.",
+      explain:"RP is non-rhotic: /r/ only before a vowel." },
+
+    { id:"s3q10", type:"mcq", marks:2, skills:["intonation"],
+      q:"Which tone is most likely on the final item of a list?",
+      options:["Rise","Fall","Fall-rise","Level"], correct:1,
+      hint:"It signals the end of the list.",
+      explain:"Lists normally end with a falling tone." },
+
+    { id:"s3q11", type:"ipa", marks:2, skills:["transcription","vowels"],
+      word:"hot", answers:["hɒt"], hint:"Open back rounded short vowel.",
+      explain:"/hɒt/ — short /ɒ/." },
+
+    { id:"s3q12", type:"mcq", marks:2, skills:["concepts"],
+      q:"The knowledge that “pin” and “bin” are different words is primarily a fact of…",
+      options:["Phonetics","Phonology","Acoustics","Articulation only"], correct:1,
+      hint:"It is about contrast and meaning in the language system.",
+      explain:"Phonology deals with which differences matter in the language." },
+
+    // 5-mark
+    { id:"s3q13", type:"desc", marks:5, skills:["consonants"],
+      q:"Give the three-term label for /f/.",
+      answers:["voiceless labiodental fricative"],
+      hint:"No voice + lip+teeth + friction.",
+      explain:"/f/ = voiceless labiodental fricative." },
+
+    { id:"s3q14", type:"desc", marks:5, skills:["vowels"],
+      q:"Describe /ɜː/ and give two example words.",
+      answers:["mid central unrounded long","long mid central"],
+      hint:"Central, mid height, long, no lip rounding.",
+      explain:"/ɜː/ is a long mid central unrounded vowel (bird, girl, work)." },
+
+    { id:"s3q15", type:"ipa", marks:5, skills:["transcription","stress"],
+      word:"beautiful", answers:["ˈbjuːtɪfl","ˈbjuːtɪfəl","ˈbjuːtəfl","ˈbjuːtəfəl"], stress:true,
+      hint:"Stress on first syllable; 'beau' = bjuː.",
+      explain:"/ˈbjuːtɪfl/ (or with /əl/)." },
+
+    { id:"s3q16", type:"desc", marks:5, skills:["diph"],
+      q:"Name the two closing diphthongs that end in /ʊ/.",
+      answers:["əʊ aʊ","/əʊ/ /aʊ/"],
+      hint:"They glide towards a closer back rounded position.",
+      explain:"/əʊ/ (go) and /aʊ/ (now, house)." },
+
+    { id:"s3q17", type:"mcq", marks:5, skills:["concepts"],
+      q:"In the syllable, the rhyme consists of…",
+      options:["Onset + nucleus","Nucleus + coda","Only the onset","Only the coda"], correct:1,
+      hint:"Everything from the vowel onwards.",
+      explain:"Rhyme = nucleus + coda." },
+
+    { id:"s3q18", type:"desc", marks:5, skills:["connected"],
+      q:"What is intrusive /r/? Give one example.",
+      answers:["r inserted between vowels where there is no letter r","intrusive r e.g. law and order"],
+      hint:"It appears even when there is no “r” in the spelling.",
+      explain:"Intrusive /r/ is inserted between vowels (law and order /ˈlɔːr ən ˈɔːdə/)." },
+
+    { id:"s3q19", type:"ipa", marks:5, skills:["transcription","stress"],
+      word:"umbrella", answers:["ʌmˈbrelə"], stress:true,
+      hint:"Stress on the second syllable.",
+      explain:"/ʌmˈbrelə/." },
+
+    { id:"s3q20", type:"desc", marks:5, skills:["stress"],
+      q:"Explain briefly how stress can change the meaning or word class of a word. Give one example.",
+      answers:["stress shift can turn noun into verb","noun stress on first verb on second e.g. record"],
+      hint:"Think of “record”, “present”, “export”.",
+      explain:"Many two-syllable words are nouns when stressed on the first syllable and verbs when stressed on the second (record, present, export)." },
+
+    // 10-mark
+    { id:"s3q21", type:"multi", marks:10, skills:["consonants"],
+      q:"Final three-term labelling set",
+      parts: [
+        { label:"A. Label /ð/ (3 marks)", marks:3, answers:["voiced dental fricative"] },
+        { label:"B. Label /ɡ/ (2 marks)", marks:2, answers:["voiced velar plosive","voiced velar stop"] },
+        { label:"C. Label /j/ (2 marks)", marks:2, answers:["voiced palatal approximant","palatal approximant"] },
+        { label:"D. How many consonant phonemes does RP have? (3 marks)", marks:3, answers:["24","twenty-four"] }
+      ],
+      hint:"RP has 24 consonants and 20 vowels.",
+      explain:"/ð/ voiced dental fricative; /ɡ/ voiced velar plosive; /j/ palatal approximant. RP has 24 consonant phonemes." },
+
+    { id:"s3q22", type:"multi", marks:10, skills:["vowels"],
+      q:"All pure vowels – summary task",
+      parts: [
+        { label:"A. Name the five long pure vowels (4 marks)", marks:4, answers:["iː ɑː ɔː uː ɜː"] },
+        { label:"B. Which long vowel is central? (2 marks)", marks:2, answers:["ɜː","/ɜː/"] },
+        { label:"C. Give one example word for /ɑː/ (2 marks)", marks:2, answers:["car","arm","father","fast","palm"] },
+        { label:"D. Give one example word for /ɔː/ (2 marks)", marks:2, answers:["saw","door","law","thought","talk"] }
+      ],
+      hint:"Long vowels all carry the length mark ː.",
+      explain:"Long: /iː ɑː ɔː uː ɜː/. /ɜː/ is central. /ɑː/ car/arm; /ɔː/ saw/door." },
+
+    { id:"s3q23", type:"multi", marks:10, skills:["concepts","stress"],
+      q:"Putting it together – analysis",
+      parts: [
+        { label:"A. Is the [p] in “spin” aspirated? (2 marks)", marks:2, answers:["no","unaspirated"] },
+        { label:"B. Why are [pʰ] and [p] not different phonemes? (3 marks)", marks:3, answers:["they never change meaning","allophones","complementary distribution"] },
+        { label:"C. Mark the stress on “examination” (primary only is enough) (3 marks)", marks:3, answers:["ˌɪɡzæmɪˈneɪʃən","on -na-","fourth syllable"] },
+        { label:"D. What kind of distribution do /p/ and /b/ show? (2 marks)", marks:2, answers:["parallel","overlapping"] }
+      ],
+      hint:"Aspiration is predictable; stress can be primary or secondary.",
+      explain:"[p] in spin is unaspirated. [pʰ]/[p] are allophones. examination has primary stress on -na-. /p/ and /b/ are in parallel distribution." },
+
+    { id:"s3q24", type:"multi", marks:10, skills:["connected"],
+      q:"Natural connected speech",
+      parts: [
+        { label:"A. Transcribe “fish and chips” naturally (3 marks)", marks:3, answers:["ˈfɪʃ ən ˈtʃɪps","fɪʃ ən tʃɪps"] },
+        { label:"B. What happened to “and”? (2 marks)", marks:2, answers:["weakened","became /ən/","weak form"] },
+        { label:"C. Transcribe “thank you very much” with main stresses (3 marks)", marks:3, answers:["ˈθæŋk ju ˈveri ˈmʌtʃ"] },
+        { label:"D. Name one connected-speech process visible in these phrases (2 marks)", marks:2, answers:["weak forms","vowel reduction","stress-timed rhythm"] }
+      ],
+      hint:"Function words reduce; content words keep stress.",
+      explain:"fish and chips → /ˈfɪʃ ən ˈtʃɪps/. “and” weakens. thank you very much keeps stresses on content words." },
+
+    { id:"s3q25", type:"multi", marks:10, skills:["intonation","concepts"],
+      q:"Intonation and final review",
+      parts: [
+        { label:"A. What are the three main tones discussed in the notes? (3 marks)", marks:3, answers:["fall rise fall-rise"] },
+        { label:"B. Give one grammatical function of intonation (3 marks)", marks:3, answers:["distinguishes statement from question","shows question vs statement"] },
+        { label:"C. Give one attitudinal function of intonation (2 marks)", marks:2, answers:["shows feeling","surprise","boredom","politeness"] },
+        { label:"D. In “He’s here.” vs “He’s here?”, what changes? (2 marks)", marks:2, answers:["the tone","fall vs rise"] }
+      ],
+      hint:"Tone can change grammar and attitude even when the words stay the same.",
+      explain:"Fall, rise, fall-rise. Grammatical: statement vs question. Attitudinal: emotion/attitude. The tone (fall vs rise) changes the function." }
+  ]}
+];
+
+/* ============================================================
+   STATE & HELPERS
+   ============================================================ */
+let student = null, currentView = 0, qIndex = 0;
+let checked = false, selected = null, hintUsed = false, multiAnswers = {};
+let progress = {}, twin = null;
+
+function newTwin(){ return { skills:{}, answered:0, correct:0, marksGot:0, marksPossible:0, history:[] }; }
+function store(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+function load(k){ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } }
+function saveAll(){ store('ppt-progress-'+student.roll, progress); store('ppt-twin-'+student.roll, twin); }
+function esc(s){ return String(s??'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+const $ = id => document.getElementById(id);
+
+function show(id){
+  ['login','lab','instructor-auth','dashboard'].forEach(s => $(s).classList.add('hidden'));
+  $(id).classList.remove('hidden');
+  const t = id==='instructor-auth'||id==='dashboard';
+  $('teacher-link').classList.toggle('hidden', t);
+  $('student-link').classList.toggle('hidden', !t);
+  $('logout-btn').classList.toggle('hidden', id!=='lab');
+}
+
+/* ============================================================
+   LOGIN
+   ============================================================ */
+function startLab(){
+  const name=$('in-name').value.trim(), roll=$('in-roll').value.trim(), college=$('in-college').value.trim();
+  if(!name||!roll||!college){ $('login-error').textContent="Please fill in all three boxes."; return; }
+  $('login-error').textContent="";
+  student={name,roll,college}; store('ppt-student',student);
+  progress=load('ppt-progress-'+roll)||{};
+  twin=Object.assign(newTwin(), load('ppt-twin-'+roll)||{});
+  openLab();
+}
+function openLab(){
+  $('show-name').textContent=student.name;
+  $('show-roll').textContent=student.roll;
+  $('show-college').textContent=student.college;
+  show('lab');
+  twin.answered>0 ? renderTwin() : openSet(0);
+}
+function logout(){
+  student=null; progress={}; twin=null;
+  try{ localStorage.removeItem('ppt-student'); }catch(e){}
+  ['in-name','in-roll','in-college'].forEach(id=>$(id).value='');
+  show('login');
+}
+function backToStudent(){ student ? openLab() : show('login'); }
+
+/* ============================================================
+   TWIN
+   ============================================================ */
+function bump(id, outcome){
+  const s=twin.skills[id]||{m:0.5,n:0};
+  s.m = s.m*0.65 + outcome*0.35;
+  s.n++; twin.skills[id]=s;
+}
+function level(st){
+  if(!st||!st.n) return {cls:'none',label:'Not tested'};
+  if(st.m>=0.75) return {cls:'strong',label:'Strong'};
+  if(st.m>=0.5) return {cls:'dev',label:'Developing'};
+  return {cls:'weak',label:'Needs work'};
+}
+function overallPct(){
+  const t=Object.values(twin.skills).filter(s=>s.n>0);
+  return t.length ? Math.round(t.reduce((a,s)=>a+s.m,0)/t.length*100) : null;
+}
+function weakSkills(){
+  return Object.entries(twin.skills)
+    .filter(([id,s])=>SKILLS[id]&&s.n>0&&s.m<0.75)
+    .sort((a,b)=>a[1].m-b[1].m).slice(0,4)
+    .map(([id,s])=>({id,m:s.m}));
+}
+function updateTwin(q, marksAwarded){
+  const max=q.marks||2;
+  const outcome = max ? marksAwarded/max : 0;
+  (q.skills||[]).forEach(id=>bump(id, outcome));
+  twin.answered++;
+  twin.marksGot += marksAwarded;
+  twin.marksPossible += max;
+  if(marksAwarded >= max*0.8) twin.correct++;
+}
+
+function skillBarsHTML(map){
+  return Object.entries(SKILLS).map(([id,s])=>{
+    const st=map[id], lv=level(st), pct=st&&st.n?Math.round(st.m*100):0;
+    return `<div class="skill"><div class="skill-top"><span>${esc(s.name)}</span>
+      <span class="lv ${lv.cls}">${lv.label}${st&&st.n?' · '+pct+'%':''}</span></div>
+      <div class="bar"><div class="${lv.cls}" style="width:${pct}%"></div></div></div>`;
+  }).join('');
+}
+
+function renderTwin(){
+  currentView='twin'; renderTabs();
+  $('question-card').classList.add('hidden');
+  $('result-card').classList.add('hidden');
+  const card=$('twin-card'); card.classList.remove('hidden');
+  const overall=overallPct();
+  const acc=twin.marksPossible?Math.round(twin.marksGot/twin.marksPossible*100)+'%':'–';
+  let html=`<h2>🧠 Your Learning Twin</h2>
+    <p class="lead">A live model of your Phonetics & Phonology skills. It updates after every answer.</p>
+    <div class="stats">
+      <div class="stat"><b>${overall===null?'–':overall+'%'}</b>Overall skill</div>
+      <div class="stat"><b>${twin.answered}</b>Questions</div>
+      <div class="stat"><b>${acc}</b>Marks accuracy</div>
+    </div>`;
+  if(!twin.answered){
+    html+=`<p style="margin-top:16px">Answer some questions and your twin will start learning about you.</p>
+      <button class="btn" onclick="openSet(0)">Start Set 1 →</button>`;
+  } else {
+    const weak=weakSkills();
+    html+=`<div class="focus-box"><b>🎯 Focus areas</b>`;
+    if(weak.length) html+=weak.map(w=>`<div style="padding:6px 0"><b>${esc(SKILLS[w.id].name)}</b> — ${Math.round(w.m*100)}%<br><span class="muted">${esc(SKILLS[w.id].tip)}</span></div>`).join('');
+    else html+=`<p class="muted">No major weak areas right now.</p>`;
+    html+=`</div><h3>Skill map</h3>${skillBarsHTML(twin.skills)}`;
+    if(twin.history.length){
+      html+=`<h3>Recent sets</h3><ul class="list">${twin.history.slice(-5).reverse().map(h=>
+        `<li>${esc(h.set)} — <b>${h.score}</b> <span class="muted">${new Date(h.t).toLocaleDateString()}</span></li>`).join('')}</ul>`;
+    }
+  }
+  card.innerHTML=html;
+}
+
+/* ============================================================
+   PRACTICE FLOW
+   ============================================================ */
+function getSet(key){ return SETS[key]; }
+function setProgress(key){
+  if(!progress[key]) progress[key]={ answers:new Array(SETS[key].questions.length).fill(null), marks:new Array(SETS[key].questions.length).fill(0), finished:false };
+  return progress[key];
+}
+function go(k){ if(k==='twin') renderTwin(); else openSet(Number(k)); }
+
+function renderTabs(){
+  const o=overallPct();
+  const items=[{k:'twin',label:'🧠 My Twin',note:o===null?'Your profile':o+'% overall'}]
+    .concat(SETS.map((s,i)=>{
+      const p=progress[i];
+      let note='Not started', done=false;
+      if(p&&p.finished){ const got=p.marks.reduce((a,b)=>a+b,0); const max=s.questions.reduce((a,q)=>a+(q.marks||2),0); note='✓ '+got+'/'+max; done=true; }
+      else if(p&&p.answers.some(a=>a!==null)) note='In progress';
+      return {k:i,label:'Set '+(i+1),note,done};
+    }));
+  $('tabs').innerHTML=items.map(t=>
+    `<button class="tab ${String(t.k)===String(currentView)?'active':''} ${t.done?'done':''}" onclick="go('${t.k}')">${t.label}<small>${t.note}</small></button>`).join('');
+}
+
+function openSet(key){
+  currentView=key;
+  const p=setProgress(key);
+  renderTabs();
+  $('twin-card').classList.add('hidden');
+  if(p.finished){ showResults(); return; }
+  const first=p.answers.findIndex(a=>a===null);
+  qIndex=first===-1?0:first;
+  $('question-card').classList.remove('hidden');
+  $('result-card').classList.add('hidden');
+  renderQuestion();
+}
+
+function renderQuestion(){
+  const set=getSet(currentView), q=set.questions[qIndex];
+  checked=false; selected=null; hintUsed=false; multiAnswers={};
+  $('set-title').textContent=set.title;
+  $('q-count').textContent=`Question ${qIndex+1} of ${set.questions.length}`;
+  $('progress-fill').style.width=(qIndex/set.questions.length*100)+'%';
+  $('check-btn').classList.remove('hidden');
+  $('next-btn').classList.add('hidden');
+  $('hint-btn').disabled=false;
+
+  const tags=(q.skills||[]).map(s=>`<span class="skill-tag">${esc(SKILLS[s]?.name||s)}</span>`).join('');
+  let html=`<span class="marks-badge">${q.marks} mark${q.marks>1?'s':''}</span>${tags}`;
+
+  if(q.type==='ipa'){
+    html+=`<div class="prompt">Write the RP transcription of <span class="word">“${esc(q.word)}”</span></div>
+      <input type="text" id="ipa-input" autocomplete="off" spellcheck="false" placeholder="Type or use the keys below" onkeydown="if(event.key==='Enter')checkAnswer()">
+      <div class="ipa-keys">${IPA_KEYS.map(k=>`<button type="button" onclick="insertSymbol('${k}')">${k}</button>`).join('')}
+        <button type="button" class="wide" onclick="backspace()">⌫</button></div>
+      <div class="muted" style="margin-top:6px">${q.stress?'Mark stress with ˈ.':''} No slashes needed.</div>`;
+  } else if(q.type==='mcq'){
+    html+=`<div class="prompt">${esc(q.q)}</div>
+      <div class="options">${q.options.map((o,i)=>`<button class="option" onclick="selectOption(${i})">${esc(o)}</button>`).join('')}</div>`;
+  } else if(q.type==='desc'){
+    html+=`<div class="prompt">${esc(q.q)}</div>
+      <textarea id="desc-input" rows="3" placeholder="Type your answer here"></textarea>`;
+  } else if(q.type==='multi'){
+    html+=`<div class="prompt"><b>${esc(q.q)}</b></div>`;
+    q.parts.forEach((p,i)=>{
+      html+=`<div class="multipart"><label>${esc(p.label)} <span class="part-marks">(${p.marks} marks)</span></label>
+        <input type="text" id="part-${i}" placeholder="Your answer"></div>`;
+    });
+  }
+  html+=`<div id="hint-area"></div><div id="feedback-area"></div>`;
+  $('question-area').innerHTML=html;
+}
+
+const IPA_KEYS=['ɪ','iː','e','æ','ʌ','ɑː','ɒ','ɔː','ʊ','uː','ɜː','ə','eɪ','aɪ','ɔɪ','əʊ','aʊ','ɪə','eə','ʊə','θ','ð','ʃ','ʒ','ŋ','tʃ','dʒ','j','ɡ','ː','ˈ','ˌ'];
+
+function insertSymbol(sym){
+  const input=$('ipa-input'); if(!input||checked) return;
+  const s=input.selectionStart??input.value.length, e=input.selectionEnd??input.value.length;
+  input.value=input.value.slice(0,s)+sym+input.value.slice(e);
+  input.focus(); input.setSelectionRange(s+sym.length,s+sym.length);
+}
+function backspace(){ const input=$('ipa-input'); if(!input||checked) return; input.value=[...input.value].slice(0,-1).join(''); input.focus(); }
+function selectOption(i){ if(checked) return; selected=i; document.querySelectorAll('.option').forEach((el,j)=>el.classList.toggle('selected',j===i)); }
+function showHint(){ const q=getSet(currentView).questions[qIndex]; $('hint-area').innerHTML=`<div class="hintbox">💡 ${esc(q.hint||'')}</div>`; $('hint-btn').disabled=true; hintUsed=true; }
+
+function normalise(s){
+  return s.normalize('NFC').replace(/[\/\[\]\s.]/g,'').replace(/[:ː]/g,'ː').replace(/g/g,'ɡ')
+    .replace(/['’`]/g,'ˈ').replace(/ɛ/g,'e').toLowerCase();
+}
+function softMatch(given, accepted){
+  const g=normalise(given);
+  return accepted.some(a=>{
+    const t=normalise(a);
+    return g===t || g.includes(t) || t.includes(g);
+  });
+}
+
+function checkAnswer(){
+  if(checked) return;
+  const q=getSet(currentView).questions[qIndex];
+  const fb=$('feedback-area');
+  let marksAwarded=0, html='', max=q.marks||2;
+
+  if(q.type==='ipa'){
+    const raw=$('ipa-input').value;
+    if(!raw.trim()){ fb.innerHTML=`<div class="feedback warn">Type your answer first.</div>`; return; }
+    let given=normalise(raw); if(!q.stress) given=given.replace(/[ˈˌ]/g,'');
+    const accepted=q.answers.map(normalise);
+    if(accepted.includes(given) || accepted.map(a=>a.replace(/[ˈˌ]/g,'')).includes(given.replace(/[ˈˌ]/g,''))){
+      marksAwarded=max; html=`<div class="feedback good">✅ Correct (${marksAwarded}/${max}). <div class="explain">${esc(q.explain)}</div></div>`;
+    } else {
+      html=`<div class="feedback bad">❌ Not quite. Correct: <b>/${esc(q.answers[0])}/</b> (0/${max})
+        <div class="explain">${esc(q.explain)}</div></div>`;
+    }
+    $('ipa-input').readOnly=true;
+  } else if(q.type==='mcq'){
+    if(selected===null){ fb.innerHTML=`<div class="feedback warn">Choose an option first.</div>`; return; }
+    const correct=selected===q.correct;
+    marksAwarded=correct?max:0;
+    document.querySelectorAll('.option').forEach((el,j)=>{ el.disabled=true; if(j===q.correct) el.classList.add('correct'); else if(j===selected) el.classList.add('wrong'); });
+    html=correct
+      ?`<div class="feedback good">✅ Correct (${marksAwarded}/${max}). <div class="explain">${esc(q.explain)}</div></div>`
+      :`<div class="feedback bad">❌ The answer is <b>${esc(q.options[q.correct])}</b> (0/${max}). <div class="explain">${esc(q.explain)}</div></div>`;
+  } else if(q.type==='desc'){
+    const raw=$('desc-input').value.trim();
+    if(!raw){ fb.innerHTML=`<div class="feedback warn">Write something first.</div>`; return; }
+    if(softMatch(raw, q.answers)){ marksAwarded=max; html=`<div class="feedback good">✅ Good answer (${marksAwarded}/${max}). <div class="explain">${esc(q.explain)}</div></div>`; }
+    else { html=`<div class="feedback bad">❌ Not quite (0/${max}). Expected something like: <b>${esc(q.answers[0])}</b><div class="explain">${esc(q.explain)}</div></div>`; }
+    $('desc-input').readOnly=true;
+  } else if(q.type==='multi'){
+    let partHtml=''; let anyFilled=false;
+    q.parts.forEach((p,i)=>{
+      const val=($('part-'+i).value||'').trim();
+      if(val) anyFilled=true;
+      const ok=softMatch(val, p.answers);
+      const got=ok?p.marks:0;
+      marksAwarded+=got;
+      partHtml+=`<div style="margin:4px 0">${ok?'✅':'❌'} Part ${String.fromCharCode(65+i)}: ${got}/${p.marks}</div>`;
+      $('part-'+i).readOnly=true;
+    });
+    if(!anyFilled){ fb.innerHTML=`<div class="feedback warn">Answer at least one part.</div>`; return; }
+    html=`<div class="feedback ${marksAwarded>=max*0.6?'good':'bad'}">Score for this question: <b>${marksAwarded}/${max}</b><div class="explain">${partHtml}${esc(q.explain)}</div></div>`;
+  }
+
+  checked=true;
+  fb.innerHTML=html;
+  const p=setProgress(currentView);
+  p.answers[qIndex]=marksAwarded;
+  p.marks[qIndex]=marksAwarded;
+  updateTwin(q, marksAwarded);
+  saveAll();
+  $('check-btn').classList.add('hidden');
+  $('hint-btn').disabled=true;
+  const next=$('next-btn');
+  next.textContent=qIndex===getSet(currentView).questions.length-1?'See my score →':'Next →';
+  next.classList.remove('hidden');
+  renderTabs();
+}
+
+function nextQuestion(){
+  if(qIndex<getSet(currentView).questions.length-1){ qIndex++; renderQuestion(); }
+  else finishSet();
+}
+
+function finishSet(){
+  const p=setProgress(currentView), set=getSet(currentView);
+  p.finished=true;
+  const got=p.marks.reduce((a,b)=>a+b,0);
+  const max=set.questions.reduce((a,q)=>a+(q.marks||2),0);
+  twin.history.push({set:set.title, score:got+' / '+max, t:Date.now()});
+  twin.history=twin.history.slice(-20);
+  saveAll(); renderTabs(); submitScore(); showResults();
+}
+
+function showResults(){
+  const set=getSet(currentView), p=progress[currentView];
+  const got=p.marks.reduce((a,b)=>a+b,0);
+  const max=set.questions.reduce((a,q)=>a+(q.marks||2),0);
+  const pct=got/max;
+  const msg=pct>=0.85?"Excellent!":pct>=0.7?"Very good work!":pct>=0.5?"Solid effort — keep practising.":"Keep going — review the weak areas.";
+  let next='';
+  if(currentView<SETS.length-1) next=`<button class="btn" onclick="openSet(${currentView+1})">Go to Set ${currentView+2} →</button>`;
+  $('question-card').classList.add('hidden');
+  const card=$('result-card'); card.classList.remove('hidden');
+  card.innerHTML=`
+    <div class="marks-badge">${esc(set.title)}</div>
+    <div class="score-big">${got} / ${max}</div>
+    <p style="font-size:18px;margin:0 0 8px">${msg}</p>
+    <p class="lead" id="submit-status">${GOOGLE_SCRIPT_URL?'Your score and twin profile have been sent to your teacher.':''}</p>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:12px">
+      <button class="btn secondary" onclick="retrySet()">↻ Try this set again</button>
+      <button class="btn secondary" onclick="renderTwin()">🧠 See my twin</button>${next}
+    </div>`;
+}
+
+function retrySet(){ delete progress[currentView]; saveAll(); openSet(currentView); }
+
+/* ============================================================
+   GOOGLE SHEETS
+   ============================================================ */
+function profileSnapshot(){
+  const skills={};
+  Object.entries(twin.skills).forEach(([id,s])=>skills[id]=[Math.round(s.m*100),s.n]);
+  return JSON.stringify({skills, answered:twin.answered, marksGot:twin.marksGot, marksPossible:twin.marksPossible});
+}
+function submitScore(){
+  if(!GOOGLE_SCRIPT_URL) return;
+  const set=getSet(currentView), p=progress[currentView];
+  const got=p.marks.reduce((a,b)=>a+b,0);
+  const max=set.questions.reduce((a,q)=>a+(q.marks||2),0);
+  const payload={
+    roll:student.roll, name:student.name, college:student.college, set:set.title,
+    score:got+' / '+max, timestamp:new Date().toLocaleString(),
+    profile:profileSnapshot(), weak:weakSkills().map(w=>SKILLS[w.id].name).join(', ')
+  };
+  fetch(GOOGLE_SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify(payload)})
+    .catch(()=>{ const s=$('submit-status'); if(s) s.textContent="Could not reach server — progress is saved on this device."; });
+}
+
+/* ============================================================
+   TEACHER DASHBOARD
+   ============================================================ */
+function verifyTeacher(){
+  if($('in-password').value===TEACHER_PASSWORD){ $('in-password').value=''; $('pw-error').textContent=''; show('dashboard'); loadDashboard(); }
+  else $('pw-error').textContent='Wrong password.';
+}
+let dashRows=[];
+function parseProfile(r){ try{ return r.profile?JSON.parse(r.profile):null; }catch(e){ return null; } }
+function fmtTime(x){ const d=new Date(x); return isNaN(d)?String(x??''):d.toLocaleString(); }
+
+async function loadDashboard(){
+  const err=$('dash-error'), body=$('dash-body');
+  err.textContent='';
+  if(!GOOGLE_SCRIPT_URL){ err.textContent='Add your Google Script URL at the top of the code.'; return; }
+  body.innerHTML=`<tr><td colspan="7" style="text-align:center">Loading…</td></tr>`;
+  try{
+    const res=await fetch(GOOGLE_SCRIPT_URL);
+    dashRows=await res.json();
+    dashRows.forEach(r=>r._pr=parseProfile(r));
+    body.innerHTML=dashRows.length
+      ?dashRows.map((r,i)=>`<tr class="clickable" onclick="showStudent(${i})"><td>${esc(r.roll)}</td><td>${esc(r.name)}</td><td>${esc(r.college)}</td>
+          <td>${esc(r.set)}</td><td><b>${esc(r.score)}</b></td><td>${esc(r.weak||'–')}</td><td>${esc(fmtTime(r.timestamp))}</td></tr>`).join('')
+      :`<tr><td colspan="7" style="text-align:center">No results yet.</td></tr>`;
+    renderClassOverview();
+  }catch(e){ body.innerHTML=''; err.textContent='Could not load. Check the Web App URL and deployment settings.'; }
+}
+
+function renderClassOverview(){
+  const latest={}; dashRows.forEach(r=>{ if(r._pr&&!latest[r.roll]) latest[r.roll]=r; });
+  const students=Object.values(latest);
+  const box=$('class-overview');
+  if(!students.length){ box.innerHTML=`<h2 style="font-size:20px">🧠 Class overview</h2><p class="muted">No twin data yet.</p>`; return; }
+  box.innerHTML=`<h2 style="font-size:20px">🧠 Class overview</h2>
+    <p class="muted">Based on latest profiles of ${students.length} student(s).</p>
+    ${skillBarsHTML((()=>{ const m={}; students.forEach(r=>Object.entries(r._pr.skills||{}).forEach(([id,v])=>{ if(!m[id]) m[id]={m:0,n:0}; m[id].m+=v[0]/100; m[id].n++; }); Object.keys(m).forEach(id=>{ m[id].m/=m[id].n; }); return m; })())}`;
+}
+
+function showStudent(i){
+  const r=dashRows[i], box=$('student-detail');
+  box.classList.remove('hidden');
+  if(!r._pr){ box.innerHTML=`<h2 style="font-size:20px">${esc(r.name)}</h2><p class="muted">No twin profile in this submission.</p>`; }
+  else {
+    const m={}; Object.entries(r._pr.skills||{}).forEach(([id,v])=>m[id]={m:v[0]/100,n:v[1]});
+    box.innerHTML=`<h2 style="font-size:20px">🧠 ${esc(r.name)} · ${esc(r.roll)}</h2>
+      <p class="muted">${esc(r.college)} · ${esc(fmtTime(r.timestamp))}</p>
+      <div class="focus-box"><b>Weak areas:</b> ${esc(r.weak||'none')}</div>
+      <h3>Skill map</h3>${skillBarsHTML(m)}`;
+  }
+  box.scrollIntoView({behavior:'smooth'});
+}
+
+function exportCSV(){
+  if(!dashRows.length){ $('dash-error').textContent='Load results first.'; return; }
+  const cols=['roll','name','college','set','score','weak','timestamp'];
+  const csv=[cols.join(',')].concat(dashRows.map(r=>cols.map(c=>'"'+String(r[c]??'').replace(/"/g,'""')+'"').join(','))).join('\n');
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'})); a.download='phonetics-phonology-results.csv'; a.click();
+}
+
+/* ============================================================
+   START
+   ============================================================ */
+const saved=load('ppt-student');
+if(saved&&saved.roll){ student=saved; progress=load('ppt-progress-'+student.roll)||{}; twin=Object.assign(newTwin(),load('ppt-twin-'+student.roll)||{}); openLab(); }
+else show('login');
+</script>
+</body>
+</html>
