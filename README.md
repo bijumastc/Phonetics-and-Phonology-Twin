@@ -15,5 +15,4 @@ Interactive practice tool for English Phonetics & Phonology (RP).
 3. Practise the sets
 
 ## For teachers
-- Click “Teacher login” (default password: `teacher123` — change it in the code)
 - Add your Google Apps Script URL at the top of `index.html` to collect scores
