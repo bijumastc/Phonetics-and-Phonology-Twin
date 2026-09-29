@@ -193,7 +193,7 @@
 /* ============================================================
    SETTINGS
    ============================================================ */
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby4hRTHATHyk-8kuxwXd04Wz60MJO53KbLwy8h4LpizhUimVoZH72hsis0K1L0eN5qOHA/exec";          // ← paste your Apps Script /exec URL
+const GOOGLE_SCRIPT_URL  = "https://script.google.com/macros/s/AKfycbytN7tDCiGsFRjBKDptZhvQK0UXhUCWmHZUVwhxhs__sIpRoLZoBbPIzRAiUSbapiSRDA/exec";          // ← paste your Apps Script /exec URL
 const TEACHER_PASSWORD  = "mab123"; // change this
 
 /* ============================================================
@@ -1098,7 +1098,7 @@ function renderClassOverview(){
   if(!students.length){ box.innerHTML=`<h2 style="font-size:20px">🧠 Class overview</h2><p class="muted">No twin data yet.</p>`; return; }
   box.innerHTML=`<h2 style="font-size:20px">🧠 Class overview</h2>
     <p class="muted">Based on latest profiles of ${students.length} student(s).</p>
-    ${skillBarsHTML((()=>{ const m={}; students.forEach(r=>Object.entries(r._pr.skills||{}).forEach(([id,v])=>{ if(!m[id]) m[id]={m:0,n:0}; m[id].m+=v[0]/100; m[id].n++; }); Object.keys(m).forEach(id=>{ m[id].m/=m[id].n; }); return m; })())}`;
+    ${skillBarsHTML((()=>{ const m={}; students.forEach(r=>Object.entries(r._pr.skills||{}).forEach(([id,v])=>{ if(!m[id]) m[id]={m:0,n:0}; m[id].m+=v[0]/100; m[id].n++; })); Object.keys(m).forEach(id=>{ m[id].m/=m[id].n; }); return m; })())}`;
 }
 
 function showStudent(i){
